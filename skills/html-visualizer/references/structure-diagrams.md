@@ -1,6 +1,6 @@
 # 結構圖（SVG）— 分支、交接、回返、跨區關係怎麼畫
 
-> 來源：github.com/cathrynlavery/diagram-design v2.6（MIT）蒸餾。整包在 `diagram-design` skill 目錄，本檔只收「每次畫圖都要用」的部分；範例 HTML、語意 pattern、動畫按需深讀（§8）。
+> 來源：github.com/cathrynlavery/diagram-design v2.6（MIT）蒸餾。整包在本 repo 內建的 fork 版 `skills/diagram-design/`（與本 skill 目錄同層；`~/.claude/skills/` 下是軟連結，走 `..` 前先 `realpath` 本 skill 目錄，本機實體路徑 `~/Documents/GitHub/skills/html-visualizer/skills/diagram-design/`）——**不是**註冊名為 `diagram-design` 的那份 skill（那是上游原版，缺本機適配段），本檔只收「每次畫圖都要用」的部分；範例 HTML、語意 pattern、動畫按需深讀（§8）。
 > 為什麼有這份：掃了兩個月共 50 份規格／流程類頁，只 5 份畫圖、14 份把流程塞進表格——不是沒需求，是元件庫只會畫直線鏈，agent 遇到分支與交接就攤成表格。三組並排實驗（泳道／流程圖／狀態機）讀者三組全選圖版：「非常好閱讀、資訊充足」。
 
 ---
@@ -377,7 +377,7 @@ viewBox **先排版、後定框**：內容排完取 bbox，寬高進位到 4 的
 
 ---
 
-## 8. 按需深讀整包（`diagram-design` skill 目錄）
+## 8. 按需深讀整包（本 repo 內建的 fork 版 `skills/diagram-design/`（與本 skill 目錄同層；`~/.claude/skills/` 下是軟連結，走 `..` 前先 `realpath` 本 skill 目錄，本機實體路徑 `~/Documents/GitHub/skills/html-visualizer/skills/diagram-design/`）——**不是**註冊名為 `diagram-design` 的那份 skill（那是上游原版，缺本機適配段））
 
 | 情境                                                         | 讀什麼                                                                                                                | 為什麼值得多花這些 token                                          |
 | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |

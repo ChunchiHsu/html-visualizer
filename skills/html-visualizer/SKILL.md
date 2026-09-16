@@ -302,7 +302,7 @@ open ~/Documents/claude-html/{YYYY-MM}/{slug}-{date}.html   # Linux 用 xdg-open
 | **`scripts/reindex.py`** ⭐ | 產出存檔後跑 — 重建 `~/Documents/claude-html/index.html` 索引頁 |
 | `references/cn-en-translation-checklist.md` ⭐ | Step 3 審稿必用 — 中英混雜詞替換對照表 + 保留原則（`verify.py` 會用它掃描，但**替換動作仍要人做**）|
 | `references/component-library.md` | 挑元件、看怎麼寫卡片 / 表格 / 直線鏈流程圖 / 樹狀 / timeline |
-| **`references/structure-diagrams.md`** ⭐ | **要畫有分支 / 交接 / 回頭路 / 分區的結構圖時**（流程圖 / 泳道 / 時序 / 狀態機 / 架構 / 依賴 / 部署 / ER…）— 選型表、六條連線規則、預算、SVG 起手片段、12 型畫法。需要該型完整範例 / 語意 pattern / 逐步動畫時再深讀 `diagram-design` skill 整包（`structure-diagrams.md` §8 列了何時讀它的哪一段）。**有分支且 ≥6 格的圖掛探索層**：§6.7 寫法＋ `assets/diagram-explore.{css,js}` 內嵌，畫完跑 `scripts/svg-text-check.mjs` 驗線端點 |
+| **`references/structure-diagrams.md`** ⭐ | **要畫有分支 / 交接 / 回頭路 / 分區的結構圖時**（流程圖 / 泳道 / 時序 / 狀態機 / 架構 / 依賴 / 部署 / ER…）— 選型表、六條連線規則、預算、SVG 起手片段、12 型畫法。需要該型完整範例 / 語意 pattern / 逐步動畫時再深讀本 repo 內建的 fork 版 `skills/diagram-design/`（與本 skill 目錄同層；`~/.claude/skills/` 下是軟連結，走 `..` 前先 `realpath` 本 skill 目錄，本機實體路徑 `~/Documents/GitHub/skills/html-visualizer/skills/diagram-design/`）——**不是**註冊名為 `diagram-design` 的那份 skill（那是上游原版，缺本機適配段）整包（`structure-diagrams.md` §8 列了何時讀它的哪一段）。**有分支且 ≥6 格的圖掛探索層**：§6.7 寫法＋ `assets/diagram-explore.{css,js}` 內嵌，畫完跑 `scripts/svg-text-check.mjs` 驗線端點 |
 | **`chart` skill（另一個 skill、不在本目錄）** ⭐ | **要畫真正的資料圖表時**（趨勢 / 占比 / 分組 / 堆疊 / 目標 vs 實際）—— 本元件庫不含圖表，一律 Read `chart` skill 照它的選圖決策表與五條鐵則做。先看 `references/component-library.md` §資料圖表 判斷「該畫圖還是該用表格」再交棒 |
 | `references/color-and-typography.md` | 配色 token、字體、間距、CSS variables |
 | `references/interaction-patterns.md` | 加 radio / dropdown / slider / drag / export / local storage / 鍵盤快捷鍵 |
