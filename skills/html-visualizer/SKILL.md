@@ -165,7 +165,7 @@ description: 把長文件、報告、規格、設計決策、架構說明、教�
     ⚠️ **版面健檢證不了樣式有生效**——它量的是溢出座標，樣式全失效時每個元素都還在自己位置上、量不出異常。兩項要一起看。
     ⚠️ **不要用行號切 CSS 片段**：要複用範本樣式就整段複製到規則邊界，或整份 head 一起帶。
 
-    ⭐ **版面健檢**（同一支指令內建，用 playwright 無頭 chromium 在 390 / 768 / 1440px 真的把頁面畫出來）：量整頁橫向溢出、凸出視窗的元素、被容器切掉的文字，**以及樣式撞車的四種可讀性崩潰**（文字被壓成直排／元素被壓扁到沒有高度／文字與背景對比不足看不見／被不透明元素蓋住），並指名是哪個元素。**跑版不在標記裡**——同一份 HTML 可以在桌機好好的、在手機整片凸出去，靜態掃 class 名稱永遠猜不到，只有量出來的座標算數（首次上線就在自家決策頁抓到 6 處手機跑版）。趕時間可加 `--no-layout` 跳過；找不到瀏覽器時同樣標「未驗證」而非通過。 pnpm 專案的 playwright 不會被提升到 `node_modules/playwright`，指令從專案根跑仍會說找不到；設 `HTML_VISUALIZER_PLAYWRIGHT_ROOT=<repo>/node_modules/.pnpm/playwright@<版本>/node_modules` 即可。
+    ⭐ **版面健檢**（同一支指令內建，用 playwright 無頭 chromium 在 390 / 768 / 1440px 真的把頁面畫出來）：量整頁橫向溢出、凸出視窗的元素、被容器切掉的文字，**以及樣式撞車的四種可讀性崩潰**（文字被壓成直排／元素被壓扁到沒有高度／文字與背景對比不足看不見／被不透明元素蓋住），並指名是哪個元素。**跑版不在標記裡**——同一份 HTML 可以在桌機好好的、在手機整片凸出去，靜態掃 class 名稱永遠猜不到，只有量出來的座標算數（首次上線就在自家決策頁抓到 6 處手機跑版）。趕時間可加 `--no-layout` 跳過；找不到瀏覽器時同樣標「未驗證」而非通過。 playwright 由 skill 自帶（本 repo 根的 `package.json` 釘版本；`~/Documents/GitHub/skills/bootstrap.sh` 第 5 步 `npm ci && npx playwright install chromium` 裝好，三支 `*-check.mjs` 的最後一站 fallback 會從 skill 目錄往上找到），任何專案跑都不必設環境變數。`HTML_VISUALIZER_PLAYWRIGHT_ROOT` 只當備援：沒跑 bootstrap 的機器要借別的專案的安裝時才設；借 pnpm 專案要指到 `<repo>/node_modules/.pnpm/playwright@<版本>/node_modules`（pnpm 不會把它提升到 `node_modules/playwright`）。
 
     - **有 `✗` 就修完再 open**，不要先開給人看。唯一例外：含 SVG 結構圖的頁面，版面健檢對 `<svg>` 報「凸出視窗」時，先確認它外層是不是 `.figure`（受控橫向捲動）——是就屬預期。**「文字被切掉」對 SVG 已不再誤報**（腳本已排除 SVG 子元素），所以那條紅字要當真。SVG 文字真正的檢查是 `scripts/svg-text-check.mjs`（`references/structure-diagrams.md` §9），`verify.py` 偵測到 `<svg>` 會自動幫你跑
     - ⚠️ 別再自己現寫 grep：手打正則出錯會產生假警報（實測踩過——寫錯的檢查回報「每段都是純文字牆」，其實產出沒問題）

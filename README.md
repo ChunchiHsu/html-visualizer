@@ -147,7 +147,7 @@ cd html-visualizer
 | 環境變數 | 作用 |
 |---|---|
 | `HTML_VISUALIZER_ARCHIVE_DIR` | 產出存放位置（預設 `~/Documents/claude-html`） |
-| `HTML_VISUALIZER_PLAYWRIGHT_ROOT` | 額外的 Playwright 搜尋路徑 |
+| `HTML_VISUALIZER_PLAYWRIGHT_ROOT` | 額外的 Playwright 搜尋路徑（在本 repo 根 `npm ci && npx playwright install chromium` 讓 skill 自帶 playwright 後就不需要；只在借用別的專案的安裝時才設） |
 
 裝好後 `skills/html-visualizer/references/examples/` 有現成範例可以打開來看。
 

@@ -1,0 +1,8 @@
+{
+  "name": "html-visualizer-skill",
+  "private": true,
+  "description": "html-visualizer skill 的執行期依賴：verify.py 用 playwright 做真瀏覽器版面／執行期健檢。npm ci 由 ~/Documents/GitHub/skills/bootstrap.sh 第 5 步執行。",
+  "devDependencies": {
+    "playwright": "1.58.2"
+  }
+}
