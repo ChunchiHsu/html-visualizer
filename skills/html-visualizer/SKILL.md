@@ -165,7 +165,7 @@ description: 把長文件、報告、規格、設計決策、架構說明、教�
     ⚠️ **版面健檢證不了樣式有生效**——它量的是溢出座標，樣式全失效時每個元素都還在自己位置上、量不出異常。兩項要一起看。
     ⚠️ **不要用行號切 CSS 片段**：要複用範本樣式就整段複製到規則邊界，或整份 head 一起帶。
 
-    ⭐ **版面健檢**（同一支指令內建，用 playwright 無頭 chromium 在 390 / 768 / 1440px 真的把頁面畫出來）：量整頁橫向溢出、凸出視窗的元素、被容器切掉的文字，**以及樣式撞車的四種可讀性崩潰**（文字被壓成直排／元素被壓扁到沒有高度／文字與背景對比不足看不見／被不透明元素蓋住），並指名是哪個元素。**跑版不在標記裡**——同一份 HTML 可以在桌機好好的、在手機整片凸出去，靜態掃 class 名稱永遠猜不到，只有量出來的座標算數（首次上線就在自家決策頁抓到 6 處手機跑版）。趕時間可加 `--no-layout` 跳過；找不到瀏覽器時同樣標「未驗證」而非通過。 playwright 由 skill 自帶（本 repo 根的 `package.json` 釘版本；`~/Documents/GitHub/skills/bootstrap.sh` 第 5 步 `npm ci && npx playwright install chromium` 裝好，三支 `*-check.mjs` 的最後一站 fallback 會從 skill 目錄往上找到），任何專案跑都不必設環境變數。`HTML_VISUALIZER_PLAYWRIGHT_ROOT` 只當備援：沒跑 bootstrap 的機器要借別的專案的安裝時才設；借 pnpm 專案要指到 `<repo>/node_modules/.pnpm/playwright@<版本>/node_modules`（pnpm 不會把它提升到 `node_modules/playwright`）。
+    ⭐ **版面健檢**（同一支指令內建，用 playwright 無頭 chromium 在 390 / 768 / 1440px 真的把頁面畫出來）：量整頁橫向溢出、凸出視窗的元素、被容器切掉的文字，**以及樣式撞車的四種可讀性崩潰**（文字被壓成直排／元素被壓扁到沒有高度／文字與背景對比不足看不見／被不透明元素蓋住），並指名是哪個元素。**跑版不在標記裡**——同一份 HTML 可以在桌機好好的、在手機整片凸出去，靜態掃 class 名稱永遠猜不到，只有量出來的座標算數（首次上線就在自家決策頁抓到 6 處手機跑版）。趕時間可加 `--no-layout` 跳過；找不到瀏覽器時同樣標「未驗證」而非通過。 playwright 由 skill 自帶（本 repo 根的 `package.json` 釘版本；`~/Documents/GitHub/skills/bootstrap.sh` 第 5 步 `npm ci && npx playwright install chromium` 裝好，三支 `*-check.mjs` 的最後一站 fallback 會從 skill 目錄往上找到），任何專案跑都不必設環境變數。`HTML_VISUALIZER_PLAYWRIGHT_ROOT` 只當備援：沒跑 bootstrap 的機器要借別的專案的安裝時才設；借 pnpm 專案要指到 `<repo>/node_modules/.pnpm/playwright@<版本>/node_modules`（pnpm 不會把它提升到 `node_modules/playwright`）。 **Claude Code 內跑要讓 verify.py 出 sandbox**：macOS Seatbelt 會把 chromium 啟動殺掉（SIGTRAP），而 verify.py 只會標「未驗證」、看不出是沒裝還是被殺；`~/.claude/settings.json` 的 `sandbox.excludedCommands` 加 `"python3 *html-visualizer/scripts/verify.py*"` 一勞永逸（2026-09-16 首次執行實測）。
 
     - **有 `✗` 就修完再 open**，不要先開給人看。唯一例外：含 SVG 結構圖的頁面，版面健檢對 `<svg>` 報「凸出視窗」時，先確認它外層是不是 `.figure`（受控橫向捲動）——是就屬預期。**「文字被切掉」對 SVG 已不再誤報**（腳本已排除 SVG 子元素），所以那條紅字要當真。SVG 文字真正的檢查是 `scripts/svg-text-check.mjs`（`references/structure-diagrams.md` §9），`verify.py` 偵測到 `<svg>` 會自動幫你跑
     - ⚠️ 別再自己現寫 grep：手打正則出錯會產生假警報（實測踩過——寫錯的檢查回報「每段都是純文字牆」，其實產出沒問題）
@@ -276,6 +276,18 @@ open ~/Documents/claude-html/{YYYY-MM}/{slug}-{date}.html   # Linux 用 xdg-open
 **為什麼不用 /tmp**：這些產出常被回頭參照（規格、盤點結果、健檢報告），暫存區重開機就清空。索引頁 `~/Documents/claude-html/index.html` 讓「上週那份在哪」有地方找——顏色點與產出頁首色帶同一套雜湊，同一個 session 的東西顏色一致。
 
 如果使用者明確要寫到別的位置（如專案的 docs 目錄）、聽他的、覆蓋歸檔預設。
+
+### 手機看：指定才部署（預設不部署）
+
+歸檔目錄整個是一個 Vercel 靜態專案（`~/Documents/claude-html/.vercel/` 已 link 到 `chunchis-projects/claude-html`，Deployment Protection 設 All deployments＝要登入 Vercel 才看得到）。**預設流程到「存檔＋重建索引＋本機 open」為止，不部署。** 只有使用者明講「部署／發到手機／我在外面／手機看」才跑：
+
+```bash
+cd ~/Documents/claude-html && vercel deploy --prod --yes   # 整個資料夾含索引頁一起上，約 20 秒
+```
+
+跑完回固定網址 `https://claude-html-eight.vercel.app`（索引頁；單頁是 `/{YYYY-MM}/{slug}-{date}.html`）。`vercel *` 已在 `sandbox.excludedCommands`，不必手動停 sandbox。新機器要先 `vercel login`（用私人帳號）再 `vercel link --yes --project claude-html`。
+
+**為什麼不預設部署**：產出多半在本機看、部署是額外一步且每次會上傳整個資料夾；使用者在外面才需要。**為什麼不用 Artifact**：範本吃 `cdn.tailwindcss.com`，Artifact 只准 cdnjs／jsdelivr，要換 CDN 還得驗 v3→v4 class 差異；而且 Artifact 一頁一網址、沒有索引頁（2026-09-17 裁定）。
 
 ### 跨 agent 使用
 

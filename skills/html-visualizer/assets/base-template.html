@@ -400,6 +400,20 @@
         text-decoration-color: var(--oat);
         text-underline-offset: 3px;
       }
+
+      /* ── 手機通用防跑版（2026-09-16 首次執行在 390px 抓到 6 處，全是這三類）──
+         ① grid／flex 子項預設 min-width:auto，長內容會把欄撐破 → 一律 min-width:0
+         ② 長英文／路徑／程式碼／粗體詞不斷行 → overflow-wrap:anywhere
+         ③ 多欄表格在手機每欄只剩幾十 px、中文被壓成直排 → 表格橫向捲動而非硬塞
+            多欄表請包 <div class="tbl-scroll">…</div>；沒包的在手機退而求其次整表可橫捲 */
+      main, main .grid > *, main .flex > * { min-width: 0; }
+      code, kbd, strong, th, td, li, dd { overflow-wrap: anywhere; }
+      pre { overflow-x: auto; }
+      .tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      @media (max-width: 600px) {
+        .tbl-scroll > table { min-width: 520px; }
+        table:not(.tbl-scroll > table) { display: block; overflow-x: auto; }
+      }
     </style>
   </head>
   <body>

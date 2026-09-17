@@ -434,8 +434,12 @@ def main(path):
 
         # ── 閱讀動線 ──
         head("閱讀動線")
-        pos = h.find("data-decision") / len(h) * 100
-        report(OK if pos <= 40 else BAD, f"第一題位置 {pos:.0f}%", "門檻 40%" if pos > 40 else "")
+        # 從 <body> 起算：head 帶的範本 CSS 上千行會灌高分母，量出來是 CSS 體積不是閱讀動線
+        # （2026-09-16 首次執行：第一題明明在正文開頭仍被判 45%，逼得砍 CSS 才過）
+        body_at = max(h.find("<body"), 0)
+        body = h[body_at:]
+        pos = body.find("data-decision") / len(body) * 100
+        report(OK if pos <= 40 else BAD, f"第一題位置 {pos:.0f}%（body 內）", "門檻 40%" if pos > 40 else "")
         if len(decisions) >= 5:
             report(OK if "qmap-list" in h else BAD, "題數 ≥ 5，有題目地圖")
         else:
