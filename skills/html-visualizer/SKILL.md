@@ -17,7 +17,7 @@ description: 把長文件、報告、規格、設計決策、架構說明、教�
 
 ## 預設視覺風格：Anthropic / Claude 官方品牌風
 
-預設用 **Anthropic 風格**（ivory 米白底 + clay 赤陶 accent + serif 標題 + italic 強調 + warm gray）— editorial / book / magazine 質感、跟 Claude 官方品牌一致。
+預設用 **Anthropic 風格**（ivory 米白底 + clay 赤陶 accent + serif 標題 + 換字重強調 + warm gray）— editorial / book / magazine 質感、跟 Claude 官方品牌一致。
 
 完整 design tokens 見 `references/color-and-typography.md`、Anthropic-signature 元件見 `references/component-library.md` § 首段。Reference 範本見 `references/examples/anthropic-gallery/index.html`。
 
