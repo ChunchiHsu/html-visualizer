@@ -21,6 +21,7 @@
       box-sizing: border-box;
     }
     body {
+      font-synthesis: none;
       margin: 0;
       background: var(--ivory);
       color: var(--ink);
@@ -67,9 +68,11 @@
       margin-block: 24px;
       font-size: clamp(38px, 6vw, 66px);
     }
+    /* 中文強調不用斜體——漢字沒有義大利體，瀏覽器只能機械傾斜、筆畫變形。改用換字重。 */
     h1 em {
       color: var(--clay);
-      font-style: italic;
+      font-style: normal;
+      font-weight: 700;
     }
     .sample-intro {
       max-width: 54ch;
