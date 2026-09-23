@@ -85,6 +85,7 @@ description: 把長文件、報告、規格、設計決策、架構說明、教�
 
 ### Step 1 思考階段（用 markdown）
 
+0. ⭐ **讀使用者的設定檔**：`python3 <本 skill 目錄>/scripts/profile.py show --rules`，印出來的文字規則當成這一頁的生成規則（偏好以設定檔為準；跟本 skill 的「規範」衝突時以本 skill 為準——規範＝相反做法本身就是缺陷，例如中文不用斜體）。字型、配色、字級、寬度這些數值**不用抄**，Step 3 的自檢會蓋章套用。沒有設定檔就全部沿用範本原值
 1. **理解需求**：呈現什麼資訊、給誰看、為了什麼決策
 2. **Read 對應範本 README**（marathon-decision-sheet 的話、必先讀）
 3. **規劃結構**：依範本框架寫 markdown outline（區段順序、每段重點、需要的視覺化類型）
@@ -102,7 +103,7 @@ description: 把長文件、報告、規格、設計決策、架構說明、教�
      | UI 結構與狀態歸屬 | component tree（code-shape）|
      | 檔案分工 / 大型重構 | 淺層檔案責任樹（code-shape）|
      | 跨部件互動時序 | SVG 時序圖（`references/structure-diagrams.md` §7.3；有分支用組合片段）|
-     | ⭐ 分支 / 角色交接 / 回頭路 / 分區跨線 / 多父或有環的依賴 | **SVG 結構圖**（`references/structure-diagrams.md`：流程圖 / 泳道 / 狀態機 / 架構 / 依賴圖…）；單向直線鏈才用 div 流程圖。**該圖 ≥6 格 → 掛探索層**（§6.7：點格聚焦 / 追上下游 / 兩點路徑 / 章節視角；`assets/diagram-explore.{css,js}` 內嵌）|
+     | ⭐ 分支 / 角色交接 / 回頭路 / 分區跨線 / 多父或有環的依賴 | **SVG 結構圖**（`references/structure-diagrams.md`：流程圖 / 泳道 / 狀態機 / 架構 / 依賴圖…）；單向直線鏈才用 div 流程圖。**該圖 ≥6 格 → 掛探索層**（§6.7：點格聚焦 / 追上下游 / 兩點路徑 / 章節視角；`assets/diagram-explore.{css,js}` 內嵌）；**有格子需要比圖上多兩行的說明 → 寫 `template[data-detail]`，點一格就在浮動窗讀到**（小圖也適用，§6.7）|
      | 改了什麼（結構 / 流程 / 檔案佈局）| 結構 diff |
      | 改了什麼（畫面外觀）| Before-After UI mock |
      | 資料的形狀 | 交棒 `chart` |
@@ -116,7 +117,8 @@ description: 把長文件、報告、規格、設計決策、架構說明、教�
    - 其他場景 → 複製 `assets/base-template.html` 起手
    - **絕不從零寫**
 6. **填內容**：把 markdown outline 翻成 HTML 元件、保留範本的互動 JS
-7. **配色 / 字體**：照 `references/color-and-typography.md` 的 token、不要自創
+7. **配色 / 字體**：照 `references/color-and-typography.md` 的 token、不要自創；使用者設定檔的值由 Step 3 自檢蓋章覆寫，不要手抄進頁面
+   - ⭐ **字級要能被「風格設定」推動**：`<style>` 與 `style=""` 裡寫死的 px 字級，自檢會自動改成乘倍率；**腳本在執行期組出來的行內字級改不到**，要自己寫成 `calc(13px * var(--fs, 1))`（字級覆蓋率檢查會抓漏）。固定在畫面上的介面列（sticky 拍板列、頂部導覽）加 `data-tw-lock`，字放到 200% 時才不會蓋掉半個畫面
 8. **存檔**：寫到 `~/Documents/claude-html/{YYYY-MM}/{slug}-{date}.html`（歸檔根目錄可用環境變數 `HTML_VISUALIZER_ARCHIVE_DIR` 改）（**不要再寫 /tmp**——系統暫存區重開機就清空，而這些產出常被回頭參照）。先寫死、Step 3 自檢後再 open
 
 ### Step 3 ⭐ 審稿階段（寫完 HTML 後、open 前必跑）
@@ -138,6 +140,8 @@ description: 把長文件、報告、規格、設計決策、架構說明、教�
     ```bash
     python3 <本 skill 目錄>/scripts/verify.py <file>
     ```
+
+    ⭐ **它會先「蓋章」、改寫受檢檔**：①把使用者設定檔選過的值寫成 `:root` 變數 ②把寫死的 px 字級與間距改成乘 `--fs`／`--dens` 倍率 ③補上「風格設定」面板（`assets/tweaks.{css,js}`，缺就注入、舊版整段換新）。三件都冪等，重跑不會疊加；倍率為 1 時頁面外觀逐像素不變。範本原檔不蓋；唯讀環境或幫別人審稿時加 `--no-stamp`。寫不進去會標「未蓋章」，不是通過。
 
     一次跑完並依產出類型自動分流：結構完整性（標籤平衡 / 標題）、⭐**腳本健檢**（每個 inline script 跑 `node --check` / JS 抓的元素 id 真的存在）、Session 識別已填值、拍板機制（決策卡 ↔ 選項 ↔ 摘要三方一致 / 每題有補充框且被抓取 / 複製摘要三件套 / 無下拉選單）、閱讀動線（第一題位置 ≤ 40% / 題數 ≥ 5 有題目地圖）、呈現品質（每段都有視覺元件 / 中英混雜詞）。
 
@@ -165,7 +169,7 @@ description: 把長文件、報告、規格、設計決策、架構說明、教�
     ⚠️ **版面健檢證不了樣式有生效**——它量的是溢出座標，樣式全失效時每個元素都還在自己位置上、量不出異常。兩項要一起看。
     ⚠️ **不要用行號切 CSS 片段**：要複用範本樣式就整段複製到規則邊界，或整份 head 一起帶。
 
-    ⭐ **版面健檢**（同一支指令內建，用 playwright 無頭 chromium 在 390 / 768 / 1440px 真的把頁面畫出來）：量整頁橫向溢出、凸出視窗的元素、被容器切掉的文字，**以及樣式撞車的四種可讀性崩潰**（文字被壓成直排／元素被壓扁到沒有高度／文字與背景對比不足看不見／被不透明元素蓋住），並指名是哪個元素。**跑版不在標記裡**——同一份 HTML 可以在桌機好好的、在手機整片凸出去，靜態掃 class 名稱永遠猜不到，只有量出來的座標算數（首次上線就在自家決策頁抓到 6 處手機跑版）。趕時間可加 `--no-layout` 跳過；找不到瀏覽器時同樣標「未驗證」而非通過。 pnpm 專案的 playwright 不會被提升到 `node_modules/playwright`，指令從專案根跑仍會說找不到；設 `HTML_VISUALIZER_PLAYWRIGHT_ROOT=<repo>/node_modules/.pnpm/playwright@<版本>/node_modules` 即可。
+    ⭐ **版面健檢**（同一支指令內建，用 playwright 無頭 chromium 在 390 / 768 / 1440px（設定檔 `checkWidths` 可改）真的把頁面畫出來）：量整頁橫向溢出、凸出視窗的元素、被容器切掉的文字，**以及樣式撞車的四種可讀性崩潰**（文字被壓成直排／元素被壓扁到沒有高度／文字與背景對比不足看不見／被不透明元素蓋住），並指名是哪個元素。**跑版不在標記裡**——同一份 HTML 可以在桌機好好的、在手機整片凸出去，靜態掃 class 名稱永遠猜不到，只有量出來的座標算數（首次上線就在自家決策頁抓到 6 處手機跑版）。趕時間可加 `--no-layout` 跳過；找不到瀏覽器時同樣標「未驗證」而非通過。 pnpm 專案的 playwright 不會被提升到 `node_modules/playwright`，指令從專案根跑仍會說找不到；設 `HTML_VISUALIZER_PLAYWRIGHT_ROOT=<repo>/node_modules/.pnpm/playwright@<版本>/node_modules` 即可。
 
     - **有 `✗` 就修完再 open**，不要先開給人看。唯一例外：含 SVG 結構圖的頁面，版面健檢對 `<svg>` 報「凸出視窗」時，先確認它外層是不是 `.figure`（受控橫向捲動）——是就屬預期。**「文字被切掉」對 SVG 已不再誤報**（腳本已排除 SVG 子元素），所以那條紅字要當真。SVG 文字真正的檢查是 `scripts/svg-text-check.mjs`（`references/structure-diagrams.md` §9），`verify.py` 偵測到 `<svg>` 會自動幫你跑
     - ⚠️ 別再自己現寫 grep：手打正則出錯會產生假警報（實測踩過——寫錯的檢查回報「每段都是純文字牆」，其實產出沒問題）
@@ -192,16 +196,18 @@ description: 把長文件、報告、規格、設計決策、架構說明、教�
 | Tailwind CDN | `<script src="https://cdn.tailwindcss.com"></script>`、不用 build tool |
 | 配色 token | 從 `references/color-and-typography.md` 複製 CSS variables、不自創 |
 | 字體 stack | Apple system + Noto Sans TC、見 typography reference |
-| 容器寬度 | 主容器 `width: min(94vw, 1760px)` 寬版置中（吃滿寬螢幕、不浪費兩側留白）；**長段落文字另加 `max-width: 72ch` 行長護欄**、grid / 卡片 / 對比 / 表格 / mock 吃滿寬。範本 `.wrap` 已內建此策略、直接複製即可 |
+| 容器寬度 | 主容器 `width: min(94vw, var(--wrap-max, 1760px))` 寬版置中（1760 是預設；設定檔 `tokens.layout.maxWidth` 與「風格設定」的「內容寬度」改的就是這個變數）（吃滿寬螢幕、不浪費兩側留白）；**長段落文字另加 `max-width: 72ch` 行長護欄**、grid / 卡片 / 對比 / 表格 / mock 吃滿寬。範本 `.wrap` 已內建此策略、直接複製即可 |
 | Header | 標題 + 副標、含日期 / 進度 / context |
 | 主要區段 | `<section id="...">` 帶 anchor 給 nav 用 |
-| Footer / Sticky bar | 如有互動或 export 需求、加 sticky bottom bar |
+| Footer / Sticky bar | 如有互動或 export 需求、加 sticky bottom bar——**一律複製 marathon 範本那條**（含 `id="preview-btn"` 的預覽鈕），不要自己另做固定在底部的列；`html`／`body` 不要設 `overflow`（會讓 sticky 失效，整條列連同按鈕跑到頁尾） |
 | ⭐⭐ **就地拍板**（有待拍板題時）| 每題放在它的背景段落末尾、同一張卡收完「問題 → 對照 → 選項 → 補充框」；只有不需要背景的程序題才收進尾段「程序快答」。範本 `.inline-decide` 區塊即此形態 |
 | ⭐ **題目地圖**（拍板題 ≥ 5 題時）| 開場區之後放一張「本次要你拍 N 題」清單卡：每題一行 + 已選 / 未選狀態 + 點擊跳到它的段落。讓「已有脈絡、只想拍完」的讀法不必捲過整篇。範本用 `renderQuestionMap()` 自動生成、不用手工維護 |
 | ⭐ **圖像化承載**（每個主要區段）| 資訊優先用視覺元件呈現、文字只做補述。連續三行以上純文字說明 = 該回頭找對應的視覺形態（`references/component-library.md`；真資料圖表交棒 `chart`）|
 | ⭐⭐ **Session 識別**（每份產出都要）| 多視窗並行時，一眼認出這份是哪個 session 產的。**寫 HTML 前先跑** `eval "$(<本 skill 目錄>/scripts/session-label.sh)"` 取得 `$VT_LABEL` / `$VT_ID`，填進 snippet 的 `window.VT_SESSION`。三層識別（分頁標題前綴 / 彩色 favicon / 頂部色帶徽章）整段見 `references/session-identity.md`；`base-template` 與 explainer / spec-alignment / marathon-decision-sheet 三份範例已內建、只需填值 |
 | ⭐ **解釋型骨架**（純展示內容）| 內容順序照 `references/examples/explainer/README.md` 的骨架 A（概念解釋）或骨架 B（報告盤點）走，不要每次重新發明。**邊界段不可省**（沒有它讀者會把剛學到的東西過度外推）|
 | ⭐ **漸進揭露**（長的純展示內容）| 主線只留所有人都該知道的，原理 / 推導 / 邊界案例收進 `<details class="reveal">`。摘要行必須能獨立判斷值不值得展開，寫「更多」等於沒寫。見 `references/interaction-patterns.md` § 漸進揭露 |
+| ⭐ **風格設定面板**（每頁都有） | 「風格設定」按鈕：頁面有範本底部列的「預覽摘要」（`id="preview-btn"`）就停在它左邊（900px 以下只顯示圖示）；沒有底部列就固定在左下角（右下角留給評論工具）。按鈕**不會閃避頁面自己做的固定列**，所以底部列一律用範本那條。面板從按鈕上方打開。固定層＝字級 90–200%、密度、內容寬度（頁面在 `:root` 宣告了 `--wrap-max` 才有這項；範本都有）。**不用手寫**，自檢蓋章時自動注入。調過的值只改畫面、不進複製摘要；讀者按「存成我的預設」後，有拍板摘要的頁會在摘要多一段「設定檔變更」（經評論收集函式自動接上），沒有的頁由按鈕直接複製這段。面板頂端可切中英文（預設跟頁面的 `lang`，讀者切過就記住；英文內容的頁把 `<html lang>` 改成 `en`，面板就預設英文） |
+| ⭐ **內容層調整**（選配，預設 0 項） | 只有當內容有兩種都合理的呈現、讀者可能想自己切換時才加（例如樣張切方案 A／B、藏掉查證佐證），**每頁最多 3 項、每項必寫 hint**（這項會改到頁面上的什麼——沒寫讀者看不出差別）。寫法：`<script type="application/json" id="vt-tweaks">[{"id":"evid","label":"查證備註","options":[["off","顯示"],["on","藏掉"]],"hint":"…"}]</script>` ＋對應 CSS `html[data-tw-evid="on"] .evid{display:none}`，**只寫宣告與 CSS、不寫 JS** |
 | ⭐ **全頁評論 snippet** | 預設內建（複製 `references/interaction-patterns.md` § 全頁評論系統 整段進 `</body>` 前）|
 | ⭐ **預覽 + 複製 modal**（有 export 按鈕時）| 既有「複製給 AI」按鈕點下去 → 彈 modal 顯示完整內容 → 確認後才複製。Pattern 見 `references/interaction-patterns.md` § Multi-format export |
 | ⭐⭐ **複製 builder 必整合所有 user 輸入**（hard rule） | 「複製拍板摘要 / 複製給 AI」類按鈕背後的 `buildSummary()` / `buildPrompt()` builder **必須**滿足三件事、否則違規：<br>① 末尾接 `+ (window.vtCollectComments?.() || '')` 拼全頁評論<br>② 註冊 `window.vtBuildDecisionExport = builderFn` 隱藏 fallback 重複按鈕<br>③ **每個 radio / select 拍板題旁邊必須配 `<textarea data-comment-for="<id>">` 補充框**，builder 內透過 `getComment(id)` 抓取拼進對應行<br>👉 整套寫法見 `references/examples/marathon-decision-sheet/index.html`：搜 `function buildSummary`（含 `getComment` 與末尾拼接 `vtCollectComments`）與緊接其後的 `window.vtBuildDecisionExport = buildSummary`；`vtCollectComments` 本體在評論 snippet 段（搜 `window.vtCollectComments =`）。行號會漂、以函式名為準 |
@@ -253,6 +259,23 @@ description: 把長文件、報告、規格、設計決策、架構說明、教�
 3. 不動 SKILL.md 主檔（除非觸發機制變了）
 
 模板隨用隨加、不需要事先規劃完整。
+
+---
+
+## 使用者的設定檔
+
+位置 `~/.config/html-visualizer/profile.json`（`HTML_VISUALIZER_PROFILE` 可覆寫），**只記使用者明確選過的項目**，沒寫的沿用範本原值。兩半：`tokens`（字型、字級倍率、配色、寬度、密度——自檢蓋章套用）＋ `rules`（寫不成數值的口味，Step 1 讀）；另有 `checkWidths`（版面健檢寬度）與 `checks.noEmoji`。
+
+| 情況 | AI 怎麼做 |
+|---|---|
+| 使用者貼回的訊息有「## 設定檔變更」段落（英文介面是「## Profile changes」） | 照段落裡那一行 `profile.py set …` 執行，完成後回報每個鍵的前後值。**使用者不用自己跑指令** |
+| 使用者口頭說「以後標題都用無襯線」「主色換藍」 | `profile.py set tokens.type.heading=… tokens.color.accent=#…`，回報前後差異 |
+| 使用者要加／改一條文字規則（例如「不要用 emoji」） | 直接編輯 JSON 的 `rules` 陣列，改完跑 `profile.py show` 確認讀得進來（寫壞時 verify 會照空白設定跑並標 ✗）；能機械判斷的另開對應檢查（目前只有 `checks.noEmoji`） |
+| 看設定檔現況 | `profile.py show`（人看）、`show --json`（整份） |
+
+`set` 只接受已知的鍵，打錯字會被拒絕、不會默默寫進去。可用的鍵見 `profile.py set` 的錯誤訊息或檔頭說明。
+
+頁面上「設定檔變更」段裡的 `profile.py` 路徑是產頁當時 skill 的位置；路徑不存在時（例如 plugin 升版換了快取目錄），改用本 skill 目錄下的 `scripts/profile.py`，參數照抄。
 
 ---
 

@@ -60,33 +60,12 @@
     </div>
   </div>
 
-  <!-- Sticky bottom bar -->
-  <footer class="sticky-bar mt-12">
-    <div class="max-w-[min(94vw,1760px)] mx-auto px-8 py-5 flex items-center justify-between gap-6">
-      <div>
-        <div class="text-[11px] uppercase tracking-widest font-semibold"
-             style="color: var(--text-muted);">提示文字</div>
-        <div class="text-sm mt-0.5">主要 CTA 描述</div>
-      </div>
-      <div class="flex items-center gap-3">
-        <!-- 主要按鈕 -->
-        <button class="px-6 py-2.5 text-sm font-semibold text-white rounded-lg"
-                style="background: var(--accent);">主要動作</button>
-      </div>
-    </div>
-  </footer>
+  <!-- 底部列：需要時整段複製 marathon 範本那條（references/examples/marathon-decision-sheet，含 id="preview-btn"，
+       風格設定按鈕會停在它左邊）。底部列一律統一用範本的，不要自己另做；自己做的固定列不會被閃避，左下角的風格設定按鈕會蓋上去 -->
 </body>
 ```
 
 ```css
-.sticky-bar {
-  position: sticky; bottom: 0;
-  background: white;
-  border-top: 2px solid var(--accent);
-  box-shadow: 0 -8px 20px -8px rgba(0,0,0,0.08);
-  backdrop-filter: blur(12px);
-}
-
 .nav-link {
   display: flex; align-items: center; gap: 10px;
   padding: 8px 12px;

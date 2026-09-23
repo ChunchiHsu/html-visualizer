@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       :root {
+        --wrap-max: 1760px; /* 內容寬度：設定檔 tokens.layout.maxWidth 與「風格設定」改的就是它 */
         /* Anthropic palette */
         --ivory: #faf9f5;
         --paper: #ffffff;
@@ -1052,6 +1053,7 @@
     <!-- ════════ Top Header ════════ -->
     <header
       class="sticky top-0 z-20"
+      data-tw-lock
       style="
         background: rgba(250, 249, 245, 0.94);
         backdrop-filter: blur(10px);
@@ -1059,7 +1061,7 @@
       "
     >
       <div
-        class="max-w-[1760px] w-[94vw] mx-auto px-8 py-4 flex items-center justify-between gap-6"
+        class="max-w-[var(--wrap-max,1760px)] w-[94vw] mx-auto px-8 py-4 flex items-center justify-between gap-6"
       >
         <div>
           <div class="eyebrow">2026-09-08 · MARATHON 收尾追認</div>
@@ -1083,7 +1085,7 @@
       </div>
     </header>
 
-    <div class="max-w-[1760px] w-[94vw] mx-auto px-8 py-10">
+    <div class="max-w-[var(--wrap-max,1760px)] w-[94vw] mx-auto px-8 py-10">
       <div class="grid grid-cols-12 gap-8">
         <!-- ════════ Sidebar Nav ════════ -->
         <aside class="col-span-2 hidden lg:block">
@@ -3551,8 +3553,9 @@
     </div>
 
     <!-- ════════ Sticky bottom bar ════════ -->
-    <footer class="sticky-bar">
-      <div class="max-w-[1760px] w-[94vw] mx-auto px-8 py-5">
+    <!-- data-tw-lock：固定在畫面上的介面列不吃字級倍率，字放大到 200% 時才不會蓋掉半個畫面 -->
+    <footer class="sticky-bar" data-tw-lock>
+      <div class="max-w-[var(--wrap-max,1760px)] w-[94vw] mx-auto px-4 sm:px-8 py-5">
         <div class="flex items-center justify-between gap-6 flex-wrap">
           <div>
             <div class="eyebrow" style="color: var(--g700)">產出決策摘要</div>
