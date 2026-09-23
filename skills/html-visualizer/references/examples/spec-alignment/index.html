@@ -29,6 +29,7 @@
     margin: 0;
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
+    font-synthesis: none;
   }
   .serif {
     font-family:
@@ -240,7 +241,11 @@
         .items-baseline { flex-wrap: wrap; }
         strong { overflow-wrap: anywhere; }
       }
-</style>
+      /* 內文 <em>：保險絲擋掉合成斜體後中文強調會消失，補字重（英文真斜體保留） */
+      em {
+        font-weight: 600;
+      }
+    </style>
 
 <div class="wrap" style="padding-top: 2.8rem; padding-bottom: 5rem">
   <!-- HERO -->

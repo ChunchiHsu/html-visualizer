@@ -62,6 +62,7 @@
         font-size: 16px;
         line-height: 1.6;
         -webkit-font-smoothing: antialiased;
+        font-synthesis: none;
       }
       h1,
       h2,
@@ -73,10 +74,35 @@
         letter-spacing: -0.012em;
         margin: 0;
       }
+      /* 中文強調不用斜體 —— 漢字沒有義大利體，瀏覽器只能機械傾斜、筆畫變形。
+         B 換字重（此處）／ C 螢光筆（.hl）／ E 保險絲（body font-synthesis）。
+         完整規則見 references/color-and-typography.md */
+      p,
+      li,
+      td {
+        text-wrap: pretty;
+      }
+      h1,
+      h2,
+      h3 {
+        text-wrap: balance;
+      }
       h1 em,
-      h2 em {
-        font-style: italic;
+      h2 em,
+      h3 em {
+        font-style: normal;
+        font-weight: 700;
         color: var(--clay);
+      }
+      .hl {
+        background: linear-gradient(transparent 58%, #f7d9a0 58%);
+        font-style: normal;
+      }
+      /* 內文的 <em>：保險絲擋掉合成斜體後，中文 em 會跟正文一模一樣（強調消失）。
+         補字重讓它看得出來；英文字體有真的義大利體，斜體照樣保留。
+         （標題的 em 另有 700 ＋ clay，選擇器較具體、不受這條影響） */
+      em {
+        font-weight: 600;
       }
       p {
         max-width: 72ch;
@@ -660,6 +686,20 @@
       }
       .reveal-body p {
         max-width: 72ch;
+      }
+          /* ── 手機：收掉桌機的水平留白 ─────────────────
+         390px 螢幕上，容器左右各 32px 的內距加上 94vw 的寬度限制，
+         會吃掉兩成多的寬度。桌機上那是呼吸空間，手機上是純損失。 */
+      @media (max-width: 640px) {
+        .wrap {
+          width: 100%;
+          padding-left: 14px;
+          padding-right: 14px;
+        }
+        ul,
+        ol {
+          padding-left: 20px;
+        }
       }
     </style>
   </head>

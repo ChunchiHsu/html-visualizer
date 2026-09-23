@@ -17,7 +17,7 @@ description: 把長文件、報告、規格、設計決策、架構說明、教�
 
 ## 預設視覺風格：Anthropic / Claude 官方品牌風
 
-預設用 **Anthropic 風格**（ivory 米白底 + clay 赤陶 accent + serif 標題 + italic 強調 + warm gray）— editorial / book / magazine 質感、跟 Claude 官方品牌一致。
+預設用 **Anthropic 風格**（ivory 米白底 + clay 赤陶 accent + serif 標題 + 換字重強調 + warm gray）— editorial / book / magazine 質感、跟 Claude 官方品牌一致。
 
 完整 design tokens 見 `references/color-and-typography.md`、Anthropic-signature 元件見 `references/component-library.md` § 首段。Reference 範本見 `references/examples/anthropic-gallery/index.html`。
 
@@ -160,7 +160,7 @@ description: 把長文件、報告、規格、設計決策、架構說明、教�
 
     **為什麼存在**（2026-09-09 實際事故，同一天第二次）：一份評估頁 18 項自檢全過、三個寬度都說沒跑版，開給使用者後**方案表的「做法」「改動」兩欄一行只剩三四個字，「取捨」欄佔了一半寬**。根因是為了讓 390px 的「文字被壓成直排」變綠，給表格末欄加了 `white-space: nowrap`——手機寬度確實過了，桌機上那欄把整列寬度吃光。直排檢查的門檻是「不到三個字寬」，一行四個字疊十行量不到；而作者改完只重跑同一支自檢、沒看畫面。**這正是上一條「為了過檢查而改的東西一律要親自看渲染結果」講的事，規則已經寫在那裡、還是踩了**——所以現在把截圖直接印在結果裡：跑完自檢**必看 1440px 那張截圖**，不看不算跑完。
 
-    表格的正確寫法：`table-layout: fixed` ＋ `<colgroup>` 明定各欄百分比；只有「A／B」這種標籤欄可以 `nowrap`；手機寬度包一層 `overflow-x: auto` 讓整表橫向捲動，不要動欄位的換行。範例見 `references/component-library.md` § 方案對照表。
+    表格的正確寫法：`table-layout: fixed` ＋ `<colgroup>` 明定各欄百分比；只有「A／B」這種標籤欄可以 `nowrap`；手機寬度**不做橫向捲動**、讓格內文字原地換行（範本 ≤900px 已對 `table` 設 `table-layout: fixed` ＋斷字，不要另加 `min-width` 或 `overflow-x: auto` 包層）——手機上橫捲軸不明顯、右邊欄容易漏看（2026-09-23 裁定）；欄數 ≥4 且每格都是長句時，手機改拆成兩張表或卡片堆疊。範例見 `references/component-library.md` § 方案對照表。
 
     ⚠️ **版面健檢證不了樣式有生效**——它量的是溢出座標，樣式全失效時每個元素都還在自己位置上、量不出異常。兩項要一起看。
     ⚠️ **不要用行號切 CSS 片段**：要複用範本樣式就整段複製到規則邊界，或整份 head 一起帶。
