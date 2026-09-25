@@ -14,7 +14,11 @@ import os from "node:os";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 
-const WIDTHS = [390, 768, 1440]; // 手機 / 平板 / 桌機
+// 寬度由 verify.py 依使用者設定檔的 checkWidths 帶進來；沒帶就用手機／平板／桌機三段
+const WIDTHS = (process.env.HTML_VISUALIZER_WIDTHS || "390,768,1440")
+  .split(",")
+  .map((x) => parseInt(x, 10))
+  .filter((x) => x > 0);
 const TOL = 1.5; // 次像素容差：瀏覽器捨入誤差不算跑版
 
 const file = process.argv[2];

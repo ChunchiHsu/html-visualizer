@@ -30,6 +30,22 @@ With this installed, the same question gets you a web page: jump around with a t
 
 Each thing the AI needs you to decide sits right next to its explanation, with the options and a note box on the same card. Pick, click "Copy decision summary", paste it back, and the AI carries on with your calls. No more typing "for #1 go with A, for #2 I'd rather…".
 
+### Click a box in a diagram, read the details beside it
+
+![Clicking the "Send shipping notice" box in a flowchart opens a floating panel beside it: what the step does today, what you need to decide, and what comes before and after; the panel is dragged to the other side, then another box is clicked and the panel updates](docs/images/explore-panel.webp)
+
+A box in a diagram only fits a few words. Now every box can carry a short write-up, and clicking it opens that write-up in a floating panel: what the step does, why, and what you need to decide. Drag the panel wherever it's handy; click anywhere outside to close it. On a phone it becomes a drawer that slides up from the bottom.
+
+### Text too small? Adjust it yourself — and keep it as your default
+
+![Clicking "風格設定" (style settings) at the bottom, dragging the text size to 150% and picking the relaxed spacing, and the whole page grows live; switching the panel to English with "EN" and back; then clicking "存成我的預設" (save as my default) adds a "profile change" block to the end of the summary preview](docs/images/style-settings.webp)
+
+Every page has a style-settings button: text size (90%–200%), spacing, and content width, all applied instantly. On pages with a copy bar at the bottom it sits next to the preview button; elsewhere it stays in the bottom-left corner. (The bundled examples aren't stamped, so they don't show the button; it's added to pages your AI makes when it runs its self-check.)
+
+Once it looks right, click "save as my default". When you paste the summary back, your AI writes those settings into your profile, and every page it makes after that opens at that size. If you don't click it, only the page in front of you changes and nothing is saved.
+
+> The style-settings panel comes in Chinese and English. It follows the page's language, and the button at its top right switches it; your choice is remembered. The diagram panel's labels are still Chinese only.
+
 ### Different content, different layouts
 
 ![Four page types: an explainer, a flowchart, data charts, and a report, each laid out differently](docs/images/gallery-en.webp)
@@ -53,7 +69,7 @@ The output is a single HTML file you open in any browser. On a phone it drops th
 
 ### It checks its own work before you see it
 
-Before handing you a page it opens it in a real browser at phone, tablet and desktop widths and confirms nothing spills off the screen, no text gets squeezed, and the buttons actually respond. Details are under *Technical detail* below.
+Before handing you a page it opens it in a real browser at phone, tablet and desktop widths and confirms nothing spills off the screen, no text gets squeezed, and the buttons actually respond. It also bumps the text size to 200% once to make sure nearly every block of text (95% or more) actually grows. Details are under *Technical detail* below.
 
 ---
 
@@ -132,6 +148,8 @@ If it doesn't kick in, just say "make this a web page".
 
 Pages open in your browser automatically and are saved to `~/Documents/claude-html/`, with an index so you can find "that one from last week".
 
+**Your taste can be saved.** Besides "save as my default" on a page, you can just tell your AI things like "use sans-serif headings from now on", "make the accent color blue" or "no emoji". It records them in `~/.config/html-visualizer/profile.json` and every later page follows them. To see what's saved, ask "show me my profile".
+
 ---
 
 ## Common questions
@@ -141,6 +159,9 @@ Restart, or tell it to reload its skills.
 
 **The answer is still a wall of text.**
 Short answers deliberately don't trigger it — you don't want a web page for a one-liner. Just say "make this a web page" if you want one.
+
+**I clicked "save as my default" on claude.ai and it was gone next time.**
+The claude.ai web app and Cowork start a fresh environment each time, so the profile can't be kept there — it only affects that session. Saving defaults needs a tool that runs on your own machine, such as Claude Code or Codex.
 
 **A check says "unverified" — is something broken?**
 No. Before showing you a page it checks the layout isn't broken, and that step needs the browser automation tool Playwright. Without it the check says "unverified", meaning "not checked" — not "something's wrong". If you have Chrome installed, `npm i -D playwright` is enough — it borrows your Chrome. Without Chrome, also run `npx playwright install chromium`.
@@ -168,7 +189,10 @@ Three skills working together:
 | Parse every stylesheet, catch stray or unterminated braces | A page with no styling whatsoever, because the CSS was cut mid-rule. Braces had been counted and matched exactly, so nothing looked wrong |
 | Render at phone, tablet and desktop widths in a real browser | The same page looks fine on a desktop and spills off a phone |
 | Four invisible failures: text squeezed into a vertical strip, elements flattened, contrast too low, content hidden behind something | A report passed every check, then came back with the text rendered one character per line |
+| Bump the text size to 200% and measure how much text actually grows | One block of hard-coded text stays put while the rest grows, so the page ends up with mixed sizes |
 | Consistency of the tick-box wiring | You answer everything and the copied summary silently drops three of them |
+
+**It rewrites the file it checks**: before checking, it "stamps" the page — applies your profile, turns hard-coded text sizes into adjustable ones, and adds the style-settings panel. Running it again changes nothing further; with no profile set and at 100%, the page looks exactly as before apart from the added style-settings button. Pass `--no-stamp` when you don't want the file touched (for example, when reviewing someone else's page).
 
 **Cross-tool**: nothing is vendor-locked. The skill config uses only the two most common fields, and the scripts need just `python3` plus optional `node`. For the session label it tries environment variables, then the Git branch, then the folder name. To open a page it uses a browser tool if there is one, otherwise the system opener, and failing that it just tells you where the file is.
 
@@ -178,8 +202,9 @@ Three skills working together:
 |---|---|
 | `HTML_VISUALIZER_ARCHIVE_DIR` | Where pages are saved (default `~/Documents/claude-html`) |
 | `HTML_VISUALIZER_PLAYWRIGHT_ROOT` | Extra path to look for Playwright |
+| `HTML_VISUALIZER_PROFILE` | Where your profile lives (default `~/.config/html-visualizer/profile.json`) |
 
-After installing, `skills/html-visualizer/references/examples/` has working examples you can open.
+After installing, `skills/html-visualizer/references/examples/` has working examples you can open (they don't include the style-settings panel; it's added during the self-check).
 
 </details>
 
@@ -187,7 +212,7 @@ After installing, `skills/html-visualizer/references/examples/` has working exam
 
 ## Language
 
-The skill instructions are written in Traditional Chinese (the author's working language). **Generated pages follow the language of your conversation** — chat in English and you get English pages.
+The skill instructions are written in Traditional Chinese (the author's working language). **Generated pages follow the language of your conversation** — chat in English and you get English pages. The style-settings panel has Chinese and English labels and follows the page's language (switch it at the panel's top right; the choice is remembered). The diagram panel is Chinese only.
 
 ## Author
 

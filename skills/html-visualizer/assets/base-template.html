@@ -10,6 +10,7 @@
       /* Anthropic / Claude 官方品牌風 design tokens     */
       /* ════════════════════════════════════════════ */
       :root {
+        --wrap-max: 1760px; /* 內容寬度：設定檔 tokens.layout.maxWidth 與「風格設定」改的就是它 */
         --ivory: #faf9f5;
         --paper: #ffffff;
         --slate: #141413;
@@ -88,7 +89,7 @@
       /* Layout                                       */
       /* ════════════════════════════════════════════ */
       .wrap {
-        width: min(94vw, 1760px);
+        width: min(94vw, var(--wrap-max, 1760px)); /* --wrap-max：設定檔或「風格設定」的內容寬度 */
         margin: 0 auto;
         padding: 0 32px 140px;
       }

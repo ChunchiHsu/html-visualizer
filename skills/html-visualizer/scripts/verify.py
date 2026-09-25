@@ -3,13 +3,17 @@
 """html-visualizer 產出自檢 — 一行跑完 SKILL.md Step 3 的所有檢查。
 
 用法：
-    python3 <skill 目錄>/scripts/verify.py <file.html>
+    python3 <skill 目錄>/scripts/verify.py <file.html> [--no-layout] [--no-stamp]
+
+檢查前會先「蓋章」（改寫受檢檔）：套用使用者設定檔、把寫死的字級與間距改成可調、補上調整面板。
+範本原檔不蓋；唯讀環境或審查時加 --no-stamp。
 
 規則來源：SKILL.md § Step 3。
 會依產出類型自動分流：有拍板題跑拍板類檢查，純展示跑骨架與呈現檢查。
 
 exit code：0 = 全過（或僅剩待人工確認），1 = 有項目未過。
 """
+import json
 import re
 import sys
 import os
@@ -19,6 +23,18 @@ import tempfile
 from html.parser import HTMLParser
 
 SKILL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+import importlib.util as _ilu
+
+# 用檔案路徑載入：標準庫也有一個 profile 模組（效能分析），用 import profile 可能拿錯
+_spec = _ilu.spec_from_file_location("vt_profile", os.path.join(os.path.dirname(os.path.abspath(__file__)), "profile.py"))
+profile_mod = _ilu.module_from_spec(_spec)
+_spec.loader.exec_module(profile_mod)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import stamp as stamp_mod  # noqa: E402
+
+# 彩色 emoji 與 ✓✗⚠ 這類符號（設定檔 checks.noEmoji 開啟時擋）。箭頭 →←、⌘ 是一般文字符號，不算
+EMOJI = re.compile("[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B50\u2B55\u231A\u231B\u23E9-\u23FA]")
+WIDTHS = [390, 768, 1440]  # 手機／平板／桌機；main() 依設定檔 checkWidths 覆寫
 CHECKLIST = os.path.join(SKILL_DIR, "references", "cn-en-translation-checklist.md")
 
 OK, BAD, WARN, SKIP, UNVERIFIED = "✓", "✗", "!", "–", "?"
@@ -182,8 +198,9 @@ def check_layout(path):
     if not shutil.which("node") or not os.path.exists(script):
         return "skip", ["找不到 node 或 layout-check.mjs"]
     try:
+        env = dict(os.environ, HTML_VISUALIZER_WIDTHS=",".join(str(w) for w in WIDTHS))
         r = subprocess.run(["node", script, os.path.abspath(path)],
-                           capture_output=True, text=True, timeout=180)
+                           capture_output=True, text=True, timeout=180, env=env)
     except subprocess.TimeoutExpired:
         return "skip", ["渲染逾時"]
     if r.returncode == 2 or "NO_PLAYWRIGHT" in r.stderr or "NO_BROWSER" in r.stderr:
@@ -217,6 +234,27 @@ def check_runtime(path):
         return "skip", [why]
     lines = [ln for ln in r.stdout.splitlines() if ln.strip()]
     return ("bad" if r.returncode == 1 else "ok"), lines
+
+
+def check_scale(path):
+    """字級拉到 200%，量有多少文字真的變大（≥95%）；同一倍率下有沒有橫向溢出。回傳 (狀態, 輸出行)。
+
+    存在理由：蓋章改得到 <style> 與 style="" 裡的字級，改不到腳本執行期才寫進去的行內樣式；
+    改不到的字拉滑桿時不會動，同一頁大小字混雜。只有量得出來。
+    """
+    script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scale-check.mjs")
+    if not shutil.which("node") or not os.path.exists(script):
+        return "skip", ["找不到 node 或 scale-check.mjs"]
+    try:
+        r = subprocess.run(["node", script, os.path.abspath(path)], capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        return "skip", ["執行逾時"]
+    if r.returncode == 2 or "NO_PLAYWRIGHT" in r.stderr or "NO_BROWSER" in r.stderr:
+        return "skip", ["找不到 playwright 或瀏覽器"]
+    lines = [ln for ln in r.stdout.splitlines() if ln.strip()]
+    m = re.search(r"橫向溢出 (\d+)px", r.stdout)
+    status = "bad" if r.returncode == 1 else ("warn" if m and int(m.group(1)) > 2 else "ok")
+    return status, lines
 
 
 class DecisionSelectParser(HTMLParser):
@@ -303,10 +341,58 @@ def check_class_collision(h):
 
 
 def main(path):
+    global WIDTHS
     h = open(path, encoding="utf-8").read()
     decisions = re.findall(r'data-decision[^>]*data-id="([^"]+)"', h)
     kind = f"拍板類 · {len(decisions)} 題" if decisions else "純展示類"
     print(f"\n▸ {os.path.basename(path)}  （{kind}）")
+    is_template = any(p in os.path.abspath(path) for p in ("/references/examples/", "/assets/", "/templates/"))
+    profile_error = None
+    try:
+        profile, profile_exists = profile_mod.load()
+    except ValueError as e:  # 設定檔寫壞：照空白設定繼續跑，但要明講
+        profile, profile_exists, profile_error = dict(profile_mod.EMPTY), False, str(e)
+    WIDTHS = [int(w) for w in (profile.get("checkWidths") or [390, 768, 1440])]
+    stamped = False
+
+    # ── 蓋章（檢查前先做，後面的檢查量的是蓋好的頁面）──────────
+    # 範本不蓋：蓋了會把使用者自己的設定帶進範本、再被複製給別人
+    head("蓋章（設定檔／字級與間距可調／調整面板）")
+    if profile_error:
+        report(BAD, "設定檔讀不進來：這次不蓋章，其他檢查照空白設定跑", profile_error[:140])
+    if profile_error:
+        # 設定檔壞了不蓋章：照空白設定蓋會把頁面上原本蓋好的設定值洗掉
+        report(SKIP, "設定檔壞了，這次不蓋章", "修好設定檔再跑一次 verify")
+    elif is_template:
+        report(SKIP, "範本原檔不蓋章", "複製出去的產出跑 verify 時才蓋")
+    elif "--no-stamp" in sys.argv:
+        report(SKIP, "--no-stamp", "這次不改檔；下方字級覆蓋率也跳過")
+    else:
+        try:
+            new, rep = stamp_mod.stamp_page(h, profile)
+        except Exception as e:  # 資產壞了（例如內嵌腳本含結尾標籤）要擋下來，不能默默略過
+            report(BAD, "蓋章失敗", str(e)[:100])
+            new, rep = h, None
+        if rep is not None:
+            wrote = True
+            new_changed = new != h
+            if new_changed:
+                try:
+                    with open(path, "w", encoding="utf-8") as f:
+                        f.write(new)
+                    h = new
+                except OSError as e:
+                    wrote = False
+                    report(UNVERIFIED, "未蓋章：檔案寫不進去", f"{e.__class__.__name__}（唯讀環境？）——頁面沒有套用設定檔與調整面板")
+            if wrote:
+                stamped = True
+                src = "你的設定檔" if profile_exists else "沒有設定檔，全部沿用範本原值"
+                what = "本次有更新" if new_changed else "已是最新，檔案沒有變動"
+                report(OK, "已蓋章", f"{src}；{what}；調整面板 {rep['tweaks_ver']}")
+
+    # 下面的靜態檢查量的是作者寫的內容：蓋章加上的東西（面板、設定檔變數、字級算式）先還原，否則按篇幅算的
+    # 檢查會誤判（短頁被當長文件、第一題位置被往後推）。腳本健檢仍看蓋好的整頁，面板也要實際跑過
+    full, h = h, stamp_mod.unstamp(h)
 
     # ── 結構完整性 ───────────────────────────────
     head("結構完整性")
@@ -324,10 +410,10 @@ def main(path):
 
     # ── 腳本健檢 ─────────────────────────────────
     # 靜態檢查全過、但腳本跑不起來 → 所有互動靜默失效（2026-08-13 實際踩過）
-    scripts = inline_scripts(h)
+    scripts = inline_scripts(full)
     if scripts:
         head("腳本健檢")
-        can_check, js_fails = check_js_syntax(h)
+        can_check, js_fails = check_js_syntax(full)
         if not can_check:
             report(UNVERIFIED, "JS 語法檢查", "找不到 node，無法驗證腳本能否解析")
         elif js_fails:
@@ -337,7 +423,7 @@ def main(path):
         else:
             report(OK, f"{len(scripts)} 個 script 區塊語法通過", "node --check")
 
-        missing = check_js_dom_refs(h)
+        missing = check_js_dom_refs(full)
         report(OK if not missing else WARN, "JS 參照的元素都存在",
                "" if not missing else f"HTML 裡找不到 {missing[:4]}（動態產生的可忽略；下方執行期健檢會實跑確認）")
 
@@ -379,10 +465,30 @@ def main(path):
         else:
             report(OK, "無 class 撞車", "沒有元素同時掛兩個管佈局的 class")
 
+    # ── 浮動說明窗 ───────────────────────────────
+    # 先拿掉腳本：探索層腳本的檔頭註解有 data-detail-open="<id>" 範例，§6.7 又規定整支不改內容貼進頁面
+    h_markup = re.sub(r"<script\b[^>]*>.*?</script\s*>", " ", h, flags=re.S | re.I)
+    details = re.findall(r'<template[^>]*\bdata-detail="([^"]+)"', h_markup)
+    if details:
+        head("浮動說明窗")
+        # 只算探索層容器裡的節點：沒包 data-explore 的圖，腳本不會接上點擊
+        # 只取 svg.xplore 本身（容器裡圖前面若有圖示 svg，抓「第一個 </svg>」會漏掉後面的節點）
+        xp_html = "".join(re.findall(r'<svg\b[^>]*\bxplore\b[^>]*>.*?</svg>', h_markup, re.S))
+        node_ids = set(re.findall(r'<g\b[^>]*\bclass="node[^"]*"[^>]*\bdata-id="([^"]+)"', xp_html))
+        node_ids |= set(re.findall(r'<g\b[^>]*\bdata-id="([^"]+)"[^>]*\bclass="node', xp_html))
+        openers = set(re.findall(r'data-detail-open="([^"]+)"', h_markup))
+        orphan = sorted(set(details) - node_ids - openers)
+        report(OK if not orphan else BAD, f"{len(details)} 段說明都對得到格子或按鈕",
+               "" if not orphan else f"這些 template 對不到探索層容器（div[data-explore]）裡的節點，也沒有 data-detail-open：{orphan[:6]}——小圖要說明也得包 data-explore")
+        dangling = sorted(openers - set(details))
+        if dangling:
+            report(BAD, "data-detail-open 指向不存在的說明", str(dangling[:6]))
+        if "diagram-explore" not in h and "xp-panel" not in h:
+            report(BAD, "寫了說明但沒內嵌探索層腳本", "把 assets/diagram-explore.{css,js} 整段貼進頁面")
+
     # ── Session 識別 ─────────────────────────────
     head("Session 識別")
     # 範本原檔本來就該留空（複製去用時才填），不算未過
-    is_template = any(p in os.path.abspath(path) for p in ("/references/examples/", "/assets/", "/templates/"))
     m = re.search(r'VT_SESSION\s*=\s*\{[^}]*label:\s*"([^"]*)"', h, re.S)
     if not m:
         report(SKIP if is_template else BAD, "未內建識別 snippet",
@@ -476,13 +582,14 @@ def main(path):
         if status == "skip":
             report(UNVERIFIED, "跑版檢查", (lines[0] if lines else "") + " → 未驗證，不等於通過")
         elif status == "ok":
-            report(OK, "三個寬度無跑版", "390 / 768 / 1440px")
+            report(OK, f"{len(WIDTHS)} 個寬度無跑版", " / ".join(str(w) for w in WIDTHS) + "px")
         else:
             report(BAD, "偵測到跑版", "詳如下")
             for ln in lines:
                 print("     " + ln)
 
-    if "<svg" in h.lower():
+    # 看標記不看腳本：蓋章注入的風格設定腳本字串裡有 <svg，不該讓每一頁都跑 SVG 檢查
+    if "<svg" in h_markup.lower():
         head("SVG 文字檢查")
         if not shutil.which("node"):
             report(UNVERIFIED, "SVG 文字檢查", "找不到 node → 未驗證，不等於通過")
@@ -500,6 +607,46 @@ def main(path):
                 if r.returncode != 0:
                     for ln in (r.stdout + r.stderr).splitlines()[:6]:
                         print("     " + ln)
+
+    # ── 設定檔與調整面板 ─────────────────────────
+    head("設定檔與調整面板")
+    if (profile.get("checks") or {}).get("noEmoji"):
+        # 程式碼區塊不算：引用終端機輸出（✓ passed）是原文照貼
+        found = EMOJI.findall(visible_text(re.sub(r"<(pre|code)\b.*?</\1>", " ", h, flags=re.S | re.I)))
+        report(OK if not found else BAD, "不用 emoji（設定檔要求）",
+               "" if not found else f"可見文字有 {len(found)} 個：{''.join(dict.fromkeys(found))[:20]}——換成 inline SVG 圖示或拿掉")
+    else:
+        report(SKIP, "emoji 檢查", "設定檔沒開 checks.noEmoji")
+    m = re.search(r'<script[^>]*\bid="vt-tweaks"[^>]*>(.*?)</script>', h, re.S)
+    if m:
+        try:
+            items = json.loads(m.group(1))
+            problems = [f"{it.get('id', '?')} 缺 hint" for it in items if not it.get("hint")]
+            problems += [f"{it.get('id', '?')} 選項少於 2" for it in items if len(it.get("options") or []) < 2]
+            if len(items) > 3:
+                problems.append(f"共 {len(items)} 項（上限 3）")
+            report(OK if not problems else BAD, f"內容層調整 {len(items)} 項", "；".join(problems))
+        except ValueError as e:
+            report(BAD, "內容層調整宣告不是合法 JSON", str(e)[:80])
+    if not stamped or "--no-layout" in sys.argv:
+        # 沒蓋到章的頁字級本來就沒轉，量了只會得到 0% 和錯誤改法
+        report(SKIP, "字級覆蓋率", "範本／未蓋章／--no-layout 不量")
+    else:
+        status, lines = check_scale(path)
+        if status == "skip":
+            report(UNVERIFIED, "字級覆蓋率", "；".join(lines) + "——沒跑到不等於通過")
+        else:
+            mark = {"ok": OK, "warn": WARN}.get(status, BAD)
+            report(mark, "字級覆蓋率", (lines[0] if lines else "") + ("（200% 時有橫向溢出，只提醒）" if status == "warn" else ""))
+            for ln in lines[1:]:
+                print("     " + ln)
+            if status == "bad":
+                print("     改法：腳本動態產生的行內字級要自己寫成 calc(Npx * var(--fs, 1))；整塊不該縮放的加 data-tw-lock")
+    rules = profile.get("rules") or []
+    if rules:
+        report(WARN, f"設定檔文字規則 {len(rules)} 條要親看", "機器判斷不了，逐條對一次")
+        for r in rules:
+            print(f"       · {r}")
 
     # ── 呈現品質 ─────────────────────────────────
     head("呈現品質")
